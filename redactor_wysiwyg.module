@@ -42,7 +42,7 @@ function redactor_wysiwyg_permission() {
       'title' => t('Upload images'),
       'description' => t('Allows the user to upload images with the Redactor editor'),
     ),
-    'upload images' => array(
+    'upload files' => array(
       'title' => t('Upload files'),
       'description' => t('Allows the user to upload files with the Redactor editor'),
     ),
