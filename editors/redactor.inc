@@ -2,6 +2,7 @@
 
 
 function redactor_wysiwyg_redactor_editor() {
+
   $editor['redactor'] = array(
     'title' => 'Redactor',
     'vendor url' => 'http://imperavi.com/redactor',
@@ -34,7 +35,6 @@ function redactor_wysiwyg_redactor_editor() {
     'versions' => array(
       '10.0.0' => array(
         'js files' => array('redactor.js'),
-        'css files' => array('redactor.css'),
       ),
     )
   );
@@ -62,8 +62,10 @@ function redactor_wysiwyg_redactor_load($editor, $library) {
   global $language ;
   $lang_name = $language->language;
 
+  drupal_add_css($editor['library path'] . '/redactor.css');
+
   if($lang_name != 'en') {
-    drupal_add_js($editor['library path'] . '/lang/' . $lang_name . '.js');
+    drupal_add_js($editor['library path'] . '/langs/' . $lang_name . '.js');
   }
 }
 
@@ -79,14 +81,7 @@ function redactor_wysiwyg_redactor_settings($editor, $config, $theme) {
   $lang_name = $language->language;
 
   $settings = array(
-    'toolbarFixed'       => false,
-    'lang'               => $lang_name,
-    'minHeight'          => 300,
-    'fileUpload'         => '/redactor/fileupload',
-    'imageUpload'        => '/redactor/imageupload',
-    'linkFileUpload'     => '/redactor/linkfileupload',
-    'convertVideoLinks'  => true,
-    'convertImagesLinks' => true
+    'lang' => $lang_name,
   );
   return $settings;
 }

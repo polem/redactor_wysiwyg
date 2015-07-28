@@ -1,7 +1,7 @@
 (function($) {
 
 Drupal.wysiwyg.editor.init.redactor = function(settings) {
-}
+};
 
 /**
  * Attach this editor to a target element.
@@ -18,19 +18,17 @@ Drupal.wysiwyg.editor.attach.redactor = function(context, params, settings) {
  * See Drupal.wysiwyg.editor.detach.none() for a full desciption of this hook.
  */
 Drupal.wysiwyg.editor.detach.redactor = function (context, params, trigger) {
+  if(trigger === 'serialize') {
+    return;
+  }
+
   $('#' + params.field).redactor('core.destroy');
 };
 
 Drupal.wysiwyg.editor.instance.redactor = {
 
-  setContent: function (content) {
-    $('#' + this.field).redactor('code.set', content);
-  },
-
-  getContent: function () {
-    return $('#' + this.field).redactor('code.get');
-  }
 };
 
 })(jQuery);
+
 
