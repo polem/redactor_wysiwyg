@@ -1,12 +1,13 @@
 <?php
 
 
-function redactor_wysiwyg_redactor_editor() {
+function redactor_redactor_editor() {
 
   $editor['redactor'] = array(
     'title' => 'Redactor',
     'vendor url' => 'http://imperavi.com/redactor',
     'download url' => 'http://imperavi.com/redactor/download',
+    'library path' => wysiwyg_get_path('redactor') . '/dist',
     'libraries' => array(
       '' => array(
         'title' => 'Default',
@@ -21,11 +22,12 @@ function redactor_wysiwyg_redactor_editor() {
         ),
       ),
     ),
-    'version callback' => 'redactor_wysiwyg_redactor_version',
-    'themes callback' => 'redactor_wysiwyg_redactor_themes',
-    'init callback' => 'redactor_wysiwyg_redactor_init',
-    'load callback' => 'redactor_wysiwyg_redactor_load',
-    'settings callback' => 'redactor_wysiwyg_redactor_settings',
+    'version callback' => 'redactor_redactor_version',
+    'themes callback' => 'redactor_redactor_themes',
+    'init callback' => 'redactor_redactor_init',
+    'load callback' => 'redactor_redactor_load',
+    'settings callback' => 'redactor_redactor_settings',
+    'plugin callback' => 'redactor_redactor_plugins',
     'proxy plugin' => array(
       'drupal' => array(
         'load' => TRUE,
@@ -41,7 +43,7 @@ function redactor_wysiwyg_redactor_editor() {
   return $editor;
 }
 
-function redactor_wysiwyg_redactor_version($editor) {
+function redactor_redactor_version($editor) {
   $library = $editor['library path'] . '/redactor.js';
   if (!file_exists($library)) {
     return;
@@ -58,7 +60,7 @@ function redactor_wysiwyg_redactor_version($editor) {
   fclose($library);
 }
 
-function redactor_wysiwyg_redactor_load($editor, $library) {
+function redactor_redactor_load($editor, $library) {
   global $language ;
   $lang_name = $language->language;
 
@@ -69,20 +71,59 @@ function redactor_wysiwyg_redactor_load($editor, $library) {
   }
 }
 
-function redactor_wysiwyg_redactor_init() {
+function redactor_redactor_init() {
 }
 
-function redactor_wysiwyg_redactor_themes($editor, $profile) {
+function redactor_redactor_themes($editor, $profile) {
   return array('simple', 'redactor');
 }
 
-function redactor_wysiwyg_redactor_settings($editor, $config, $theme) {
+function redactor_redactor_settings($editor, $config, $theme) {
   global $language ;
   $lang_name = $language->language;
 
-  $settings = array(
-    'lang' => $lang_name,
-  );
+  $settings = array();
+
+  $plugins = wysiwyg_get_plugins($editor['name']);
+
+  if (!empty($config['buttons'])) {
+    $buttons = array();
+    foreach ($config['buttons'] as $plugin => $enabled_buttons) {
+      foreach($enabled_buttons as $enabled_button => $button_name) {
+        $buttons[] = $enabled_button;
+      }
+    }
+    $settings['buttons'] = $buttons;
+  }
+
+  if (isset($config['language'])) {
+    $settings['lang'] = $config['language'];
+  }
+
   return $settings;
+}
+
+function redactor_redactor_plugins($editor) {
+  return array(
+    'default' => array(
+      'buttons' => array(
+        'html' => 'Html',
+        'formatting' => 'Formatting',
+        'bold' => 'Bold',
+        'italic' => 'Italic',
+        'deleted' => 'Deleted',
+        'unorderedlist' => 'Unordered List',
+        'orderedlist' => 'Ordered List',
+        'outdent' => 'Outdent',
+        'indent' => 'Indent',
+        'image' => 'Image',
+        'file' => 'File',
+        'link' => 'Link',
+        'alignment' => 'Alignment',
+        'horizontalrule' => 'Horizontal Rule',
+      ),
+      'internal' => TRUE,
+    ),
+  );
 }
 

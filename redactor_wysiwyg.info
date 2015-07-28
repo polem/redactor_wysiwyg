@@ -1,5 +1,0 @@
-name = Redactor wysiwyg
-description = Redactor wysiwyg
-dependencies[] = wysiwyg
-core = 7.x
-

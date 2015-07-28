@@ -1,0 +1,5 @@
+name = Redactor
+description = Redactor
+dependencies[] = wysiwyg
+core = 7.x
+

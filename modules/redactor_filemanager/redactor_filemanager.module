@@ -1,0 +1,108 @@
+<?php 
+
+/**
+ * Implements hook_menu().
+ */
+function redactor_filemanager_menu() {
+  $items['redactor/filemanager/upload'] = array(
+    'title' => 'Redactor file upload',
+    'description' => 'Ajax callback to upload files from Redactor editor',
+    'page callback' => 'redactor_filemanager_upload',
+    'access arguments' => array('redactor upload files'),
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['redactor/filemanager/files.json'] = array(
+    'title' => 'Redactor file list',
+    'description' => 'Ajax callback to list files from Redactor editor',
+    'page callback' => 'redactor_filemanager_list',
+    'access arguments' => array('redactor list files'),
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
+/**
+ * return json file of public images
+ */
+function redactor_filemanager_list() {
+  $files_urls = array();
+
+  $extensions = array('pdf', 'doc', 'docx', 'zip');
+
+  $files = file_scan_directory(
+    'public://', '/\.(' . join($extensions, '|') . ')$/',
+    array(
+      'recurse' => false
+    )
+  );
+
+  foreach($files as $file) {
+    $url = parse_url(file_create_url($file->uri));
+    $files_urls[] = array(
+      'link'  => $url['path'],
+      'size'  => redactor_human_filesize(filesize($file->uri)),
+      'name'  => $file->name,
+      'title' => $file->name
+    );
+  }
+
+  return drupal_json_output($files_urls);
+}
+
+
+/**
+ * Implements hook_permission().
+ */
+function redactor_filemanager_permission() {
+  return array(
+    'redactor upload files' => array(
+      'title' => t('Upload files'),
+      'description' => t('Allows the user to upload files with the Redactor editor'),
+    ),
+    'redactor list files' => array(
+      'title' => t('List files'),
+      'description' => t('Allows the user to list files with the Redactor editor'),
+    ),
+  );
+}
+
+/**
+ * Callback to upload files
+ */
+function redactor_filemanager_upload() {
+  $file = file_unmanaged_copy($_FILES['file']['tmp_name'], 'public://' . $_FILES['file']['name']);
+  $file = file_create_url($file);
+
+  drupal_json_output(array(
+    'filename' => $_FILES['file']['name'],
+    'filelink' => $file
+  ));
+}
+
+function redactor_filemanager_wysiwyg_plugin($editor, $version) {
+  $editorConfig = wysiwyg_get_editor($editor);
+
+  $pluginFile = join(array($editorConfig['library path'], 'plugins', 'filemanager.js'), DIRECTORY_SEPARATOR);
+
+  drupal_add_js($pluginFile);
+
+  return array(
+    'filemanager' => array(
+      'load' => TRUE,
+      'internal' => TRUE,
+    ),
+  );
+}
+
+/**
+ * Implements hook_wysiwyg_editor_settings_alter.
+ */
+function redactor_filemanager_wysiwyg_editor_settings_alter(&$settings, $context) {
+  if ($context['profile']->editor == 'redactor') {
+    $settings['plugins'][] = 'filemanager';
+    $settings['fileManagerJson'] = url('redactor/filemanager/files.json');
+    $settings['fileUpload'] = url('redactor/filemanager/upload');
+  }
+}

@@ -1,0 +1,100 @@
+<?php
+
+
+/**
+ * Implements hook_menu().
+ */
+function redactor_imagemanager_menu() {
+  $items['redactor/imagemanager/upload'] = array(
+    'title' => 'Redactor image upload',
+    'description' => 'Ajax callback to upload image from Redactor editor',
+    'page callback' => 'redactor_imagemanager_upload',
+    'access arguments' => array('redactor upload images'),
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['redactor/imagemanager/images.json'] = array(
+    'title' => 'Redactor image list',
+    'description' => 'Ajax callback to list image from Redactor editor',
+    'page callback' => 'redactor_imagemanager_list',
+    'access arguments' => array('redactor list images'),
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function redactor_imagemanager_permission() {
+  return array(
+    'redactor upload images' => array(
+      'title' => t('Upload images'),
+      'description' => t('Allows the user to upload images with the Redactor editor'),
+    ),
+    'redactor list images' => array(
+      'title' => t('List images'),
+      'description' => t('Allows the user to list images with the Redactor editor'),
+    ),
+  );
+}
+
+/**
+ * return json file of public images
+ */
+function redactor_imagemanager_list() {
+  $files_urls = array();
+
+  $extensions = array('jpg', 'png', 'jpeg');
+
+  $files = file_scan_directory(
+    'public://', '/\.(' . join($extensions, '|') . ')$/',
+    array(
+      'recurse' => false
+    )
+  );
+
+  foreach($files as $file) {
+    $url = parse_url(file_create_url($file->uri));
+    $files_urls[] = array(
+      'image' => $url['path'],
+      'thumb' => image_style_url('thumbnail', $file->uri),
+      'name'  => $file->name
+    );
+  }
+
+  return drupal_json_output($files_urls);
+}
+
+function redactor_imagemanager_wysiwyg_plugin($editor, $version) {
+
+  if($editor !== 'redactor') {
+    return;
+  }
+
+  $editorConfig = wysiwyg_get_editor($editor);
+
+  $pluginFile = join(array($editorConfig['library path'], 'plugins', 'imagemanager.js'), DIRECTORY_SEPARATOR);
+
+  drupal_add_js($pluginFile);
+
+  return array(
+    'imagemanager' => array(
+      'load' => TRUE,
+      'internal' => TRUE,
+    ),
+  );
+}
+
+/**
+ * Implements hook_wysiwyg_editor_settings_alter.
+ */
+function redactor_imagemanager_wysiwyg_editor_settings_alter(&$settings, $context) {
+  if ($context['profile']->editor == 'redactor') {
+    $settings['plugins'][] = 'imagemanager';
+    $settings['imageManagerJson'] = url('redactor/imagemanager/images.json');
+    $settings['imageUpload'] = url('redactor/imagemanager/upload');
+  }
+}
+

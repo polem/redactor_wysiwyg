@@ -1,4 +1,4 @@
-redactor_wysiwyg
+redactor
 ================
 
 Drupal 7 redactor wysiwyg adapter

@@ -1,0 +1,6 @@
+name = Redactor imagemanager
+description = Redactor imagemanager
+dependencies[] = redactor
+core = 7.x
+
+

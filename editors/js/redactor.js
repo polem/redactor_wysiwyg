@@ -9,6 +9,7 @@ Drupal.wysiwyg.editor.init.redactor = function(settings) {
  * See Drupal.wysiwyg.editor.attach.none() for a full desciption of this hook.
  */
 Drupal.wysiwyg.editor.attach.redactor = function(context, params, settings) {
+console.log(settings);
   $('#' + params.field).redactor(settings);
 };
 

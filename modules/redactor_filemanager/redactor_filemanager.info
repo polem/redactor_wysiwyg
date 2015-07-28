@@ -1,0 +1,6 @@
+name = Redactor filemanager
+description = Redactor filemanager
+dependencies[] = redactor
+core = 7.x
+
+
