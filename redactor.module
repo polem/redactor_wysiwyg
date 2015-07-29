@@ -10,4 +10,159 @@ function redactor_human_filesize($bytes, $decimals = 2) {
   return sprintf("%.{$decimals}f", $bytes / pow(1024, $factor)) . @$size[$factor];
 }
 
+/**
+ * Implements hook_redactor_plugins.
+ */
+function redactor_redactor_plugins($editor) {
+
+  return array(
+    'counter' => array(
+      'name' => 'Counter',
+      'files' => array(
+        'js' => array(
+          $editor['library path'] . '/plugins/counter.js',
+        ),
+      ),
+    ),
+    'definedlinks' => array(
+      'name' => 'Defined links',
+      'files' => array(
+        'js' => array(
+          $editor['library path'] . '/plugins/definedlinks.js',
+        ),
+      ),
+    ),
+    'fontcolor' => array(
+      'name' => 'Font color',
+      'files' => array(
+        'js' => array(
+          $editor['library path'] . '/plugins/fontcolor.js',
+        ),
+      ),
+    ),
+    'fontfamily' => array(
+      'name' => 'Font family',
+      'files' => array(
+        'js' => array(
+          $editor['library path'] . '/plugins/fontfamily.js',
+        ),
+      ),
+    ),
+    'fontsize' => array(
+      'name' => 'Font size',
+      'files' => array(
+        'js' => array(
+          $editor['library path'] . '/plugins/fontsize.js',
+        ),
+      ),
+    ),
+    'fullscreen' => array(
+      'name' => 'Fullscreen',
+      'files' => array(
+        'js' => array(
+          $editor['library path'] . '/plugins/fullscreen.js',
+        ),
+      ),
+    ),
+    'limiter' => array(
+      'name' => 'Limiter',
+      'files' => array(
+        'js' => array(
+          $editor['library path'] . '/plugins/limiter.js',
+        ),
+      ),
+    ),
+    'table' => array(
+      'name' => 'Table',
+      'files' => array(
+        'js' => array(
+          $editor['library path'] . '/plugins/table.js',
+        ),
+      ),
+    ),
+    'textdirection' => array(
+      'name' => 'Text direction',
+      'files' => array(
+        'js' => array(
+          $editor['library path'] . '/plugins/textdirection.js',
+        ),
+      ),
+    ),
+    'textexpander' => array(
+      'name' => 'Text expander',
+      'files' => array(
+        'js' => array(
+          $editor['library path'] . '/plugins/textexpander.js',
+        ),
+      ),
+    ),
+    'video' => array(
+      'name' => 'Video',
+      'files' => array(
+        'js' => array(
+          $editor['library path'] . '/plugins/video.js',
+        ),
+      ),
+    ),
+  );
+}
+
+/**
+ * Return redactor availables plugins
+ *
+ */
+function redactor_get_plugins() {
+  $editor = wysiwyg_get_editor('redactor');
+
+  return module_invoke_all('redactor_plugins', $editor);
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function redactor_form_wysiwyg_profile_form_alter(&$form, &$form_state, $profile) {
+  if($form_state['wysiwyg']['editor'] == 'redactor') {
+    return;
+  }
+
+  $form['plugins'] = array(
+    '#weight' => -10,
+    '#type' => 'fieldset',
+    '#title' => t('Redactor plugins'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#tree' => TRUE,
+    '#theme' => 'wysiwyg_admin_button_table',
+  );
+
+  $plugins = redactor_get_plugins();
+  $profile = $form_state['wysiwyg_profile'];
+
+  foreach($plugins as $name => $infos) {
+    $form['plugins'][$name][$name] = array(
+      '#type' => 'checkbox',
+      '#title' => $infos['name'],
+      '#default_value' => !empty($profile->settings['plugins'][$name][$name]) ? $profile->settings['plugins'][$name][$name] : FALSE,
+      '#description' => NULL,
+    );
+  }
+
+  array_unshift($form['#submit'], 'redactor_profile_form_submit');
+
+  return $form;
+}
+
+function redactor_profile_form_submit($form, &$form_state) {
+  $values = &$form_state['values'];
+  if (isset($values['plugins'])) {
+    // Store only enabled plugins for each plugin.
+    foreach ($values['plugins'] as $plugin => $plugins) {
+      $values['plugins'][$plugin] = array_filter($values['plugins'][$plugin]);
+    }
+    // Store only enabled plugins.
+    $values['plugins'] = array_filter($values['plugins']);
+  }
+}
+
+
 

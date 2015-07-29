@@ -24,10 +24,9 @@ function redactor_redactor_editor() {
     ),
     'version callback' => 'redactor_redactor_version',
     'themes callback' => 'redactor_redactor_themes',
-    'init callback' => 'redactor_redactor_init',
     'load callback' => 'redactor_redactor_load',
     'settings callback' => 'redactor_redactor_settings',
-    'plugin callback' => 'redactor_redactor_plugins',
+    'plugin callback' => 'redactor_redactor_wysiwyg_plugins',
     'proxy plugin' => array(
       'drupal' => array(
         'load' => TRUE,
@@ -71,7 +70,22 @@ function redactor_redactor_load($editor, $library) {
   }
 }
 
-function redactor_redactor_init() {
+function redactor_redactor_load_plugin_files($editor, $config) {
+  if(!isset($config['files'])) {
+    return;
+  }
+
+  if(isset($config['files']['js'])) {
+    foreach($config['files']['js'] as $file) {
+      drupal_add_js($file);
+    }
+  }
+
+  if(isset($config['files']['css'])) {
+    foreach($config['files']['css'] as $filename) {
+      drupal_add_css($editor['library path'] . '/plugins/' . $filename);
+    }
+  }
 }
 
 function redactor_redactor_themes($editor, $profile) {
@@ -82,9 +96,20 @@ function redactor_redactor_settings($editor, $config, $theme) {
   global $language ;
   $lang_name = $language->language;
 
-  $settings = array();
+  $settings = array(
+    'plugins' => array()
+  );
 
-  $plugins = wysiwyg_get_plugins($editor['name']);
+  $pluginConfigs = redactor_get_plugins();
+
+  if (!empty($config['plugins'])) {
+    foreach ($config['plugins'] as $plugin => $enabled_plugins) {
+      foreach($enabled_plugins as $enabled_plugin => $plugin_name) {
+        redactor_redactor_load_plugin_files($editor, $pluginConfigs[$enabled_plugin]);
+        $settings['plugins'][] = $enabled_plugin;
+      }
+    }
+  }
 
   if (!empty($config['buttons'])) {
     $buttons = array();
@@ -103,7 +128,25 @@ function redactor_redactor_settings($editor, $config, $theme) {
   return $settings;
 }
 
-function redactor_redactor_plugins($editor) {
+
+/**
+ * Load enabled redactor plugins (wysiwyg extensions)
+ */
+function redactor_load_readactor_enabled_plugins($editor, $config) {
+  // get enabled extensions
+  foreach ($plugins as $name => $plugin) {
+    $settings['plugins'][] = $name;
+    if (!empty($plugin['files'])) {
+      if (!empty($plugin['files']['js'])) {
+        foreach($plugin['files']['js'] as $filename) {
+          drupal_add_js($editor['library path'] . '/plugins/' . $filename);
+        }
+      }
+    }
+  }
+}
+
+function redactor_redactor_wysiwyg_plugins($editor) {
   return array(
     'default' => array(
       'buttons' => array(

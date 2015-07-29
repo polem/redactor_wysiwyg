@@ -67,22 +67,19 @@ function redactor_imagemanager_list() {
   return drupal_json_output($files_urls);
 }
 
-function redactor_imagemanager_wysiwyg_plugin($editor, $version) {
-
-  if($editor !== 'redactor') {
-    return;
-  }
-
-  $editorConfig = wysiwyg_get_editor($editor);
-
-  $pluginFile = join(array($editorConfig['library path'], 'plugins', 'imagemanager.js'), DIRECTORY_SEPARATOR);
-
-  drupal_add_js($pluginFile);
+/**
+ * Implements hook_redactor_plugins.
+ */
+function redactor_imagemanager_redactor_plugins($editor) {
 
   return array(
     'imagemanager' => array(
-      'load' => TRUE,
-      'internal' => TRUE,
+      'name' => 'Image manager',
+      'files' => array(
+        'js' => array(
+          $editor['library path'] . '/plugins/imagemanager.js',
+        ),
+      ),
     ),
   );
 }
@@ -92,7 +89,6 @@ function redactor_imagemanager_wysiwyg_plugin($editor, $version) {
  */
 function redactor_imagemanager_wysiwyg_editor_settings_alter(&$settings, $context) {
   if ($context['profile']->editor == 'redactor') {
-    $settings['plugins'][] = 'imagemanager';
     $settings['imageManagerJson'] = url('redactor/imagemanager/images.json');
     $settings['imageUpload'] = url('redactor/imagemanager/upload');
   }

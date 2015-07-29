@@ -81,17 +81,19 @@ function redactor_filemanager_upload() {
   ));
 }
 
-function redactor_filemanager_wysiwyg_plugin($editor, $version) {
-  $editorConfig = wysiwyg_get_editor($editor);
-
-  $pluginFile = join(array($editorConfig['library path'], 'plugins', 'filemanager.js'), DIRECTORY_SEPARATOR);
-
-  drupal_add_js($pluginFile);
+/**
+ * Implements hook_redactor_plugins.
+ */
+function redactor_filemanager_redactor_plugins($editor) {
 
   return array(
     'filemanager' => array(
-      'load' => TRUE,
-      'internal' => TRUE,
+      'name' => 'File manager',
+      'files' => array(
+        'js' => array(
+          $editor['library path'] . '/plugins/filemanager.js',
+        ),
+      ),
     ),
   );
 }
@@ -101,7 +103,6 @@ function redactor_filemanager_wysiwyg_plugin($editor, $version) {
  */
 function redactor_filemanager_wysiwyg_editor_settings_alter(&$settings, $context) {
   if ($context['profile']->editor == 'redactor') {
-    $settings['plugins'][] = 'filemanager';
     $settings['fileManagerJson'] = url('redactor/filemanager/files.json');
     $settings['fileUpload'] = url('redactor/filemanager/upload');
   }
