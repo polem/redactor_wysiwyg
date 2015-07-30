@@ -41,6 +41,24 @@ function redactor_imagemanager_permission() {
 }
 
 /**
+ * Callback to upload images
+ */
+function redactor_imagemanager_upload() {
+  if (getimagesize($_FILES['file']['tmp_name'])) {
+   $file = file_unmanaged_copy($_FILES['file']['tmp_name'], 'public://' . $_FILES['file']['name']);
+   $file = file_create_url($file);
+
+   drupal_json_output(array(
+     'filelink' => $file
+   ));
+
+  } else {
+    print t('Not a valid image');
+  }
+}
+
+
+/**
  * return json file of public images
  */
 function redactor_imagemanager_list() {
