@@ -24,6 +24,17 @@ function redactor_redactor_plugins($editor) {
         ),
       ),
     ),
+    'clips' => array(
+      'name' => 'Clips',
+      'files' => array(
+        'js' => array(
+          $editor['library path'] . '/plugins/clips/clips.js',
+        ),
+        'css' => array(
+          $editor['library path'] . '/plugins/clips/clips.css',
+        ),
+      ),
+    ),
     'definedlinks' => array(
       'name' => 'Defined links',
       'files' => array(

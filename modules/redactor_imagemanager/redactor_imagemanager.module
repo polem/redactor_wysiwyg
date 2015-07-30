@@ -95,20 +95,14 @@ function redactor_imagemanager_redactor_plugins($editor) {
       'name' => 'Image manager',
       'files' => array(
         'js' => array(
-          $editor['library path'] . '/plugins/imagemanager.js',
+          $editor['library path'] . '/plugins/imagemanager.js' => array(),
         ),
+      ),
+      'settings' => array(
+        'imageManagerJson' => url('redactor/imagemanager/images.json'),
+        'imageUpload' => url('redactor/imagemanager/upload'),
       ),
     ),
   );
-}
-
-/**
- * Implements hook_wysiwyg_editor_settings_alter.
- */
-function redactor_imagemanager_wysiwyg_editor_settings_alter(&$settings, $context) {
-  if ($context['profile']->editor == 'redactor') {
-    $settings['imageManagerJson'] = url('redactor/imagemanager/images.json');
-    $settings['imageUpload'] = url('redactor/imagemanager/upload');
-  }
 }
 

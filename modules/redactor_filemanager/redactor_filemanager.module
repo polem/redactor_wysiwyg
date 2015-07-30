@@ -91,19 +91,14 @@ function redactor_filemanager_redactor_plugins($editor) {
       'name' => 'File manager',
       'files' => array(
         'js' => array(
-          $editor['library path'] . '/plugins/filemanager.js',
+          $editor['library path'] . '/plugins/filemanager.js' => array(),
         ),
+      ),
+      'settings' => array(
+        'fileManagerJson' => url('redactor/filemanager/files.json'),
+        'fileUpload' => url('redactor/filemanager/upload'),
       ),
     ),
   );
 }
 
-/**
- * Implements hook_wysiwyg_editor_settings_alter.
- */
-function redactor_filemanager_wysiwyg_editor_settings_alter(&$settings, $context) {
-  if ($context['profile']->editor == 'redactor') {
-    $settings['fileManagerJson'] = url('redactor/filemanager/files.json');
-    $settings['fileUpload'] = url('redactor/filemanager/upload');
-  }
-}

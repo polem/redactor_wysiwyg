@@ -66,7 +66,9 @@ function redactor_redactor_load($editor, $library) {
   drupal_add_css($editor['library path'] . '/redactor.css');
 
   if($lang_name != 'en') {
-    drupal_add_js($editor['library path'] . '/langs/' . $lang_name . '.js');
+    drupal_add_js($editor['library path'] . '/langs/' . $lang_name . '.js', array(
+      'scope' => 'footer'
+    ));
   }
 }
 
@@ -75,15 +77,34 @@ function redactor_redactor_load_plugin_files($editor, $config) {
     return;
   }
 
+  $default_js_options = array(
+    'scope' => 'footer',
+    'group' => JS_DEFAULT
+  );
+
+  $default_css_options = array(
+    'scope' => 'footer',
+    'group' => JS_DEFAULT
+  );
+
   if(isset($config['files']['js'])) {
-    foreach($config['files']['js'] as $file) {
-      drupal_add_js($file);
+    foreach($config['files']['js'] as $data => $options) {
+      if(!is_string($data)) {
+        $data = $options;
+        $options = array();
+      }
+      $options = array_merge($default_js_options, $options);
+      drupal_add_js($data, $options);
     }
   }
 
   if(isset($config['files']['css'])) {
-    foreach($config['files']['css'] as $filename) {
-      drupal_add_css($editor['library path'] . '/plugins/' . $filename);
+    foreach($config['files']['css'] as $data => $options) {
+      if(!is_string($data)) {
+        $data = $options;
+        $options = array();
+      }
+      drupal_add_css($data, $options);
     }
   }
 }
@@ -100,12 +121,20 @@ function redactor_redactor_settings($editor, $config, $theme) {
     'plugins' => array()
   );
 
-  $pluginConfigs = redactor_get_plugins();
+  $plugin_configs = redactor_get_plugins();
 
   if (!empty($config['plugins'])) {
     foreach ($config['plugins'] as $plugin => $enabled_plugins) {
       foreach($enabled_plugins as $enabled_plugin => $plugin_name) {
-        redactor_redactor_load_plugin_files($editor, $pluginConfigs[$enabled_plugin]);
+        $plugin_config = $plugin_configs[$enabled_plugin];
+        redactor_redactor_load_plugin_files($editor, $plugin_config);
+
+        // merge plugin settings into editor settings
+        if(isset($plugin_config['settings'])) {
+          $settings += $plugin_config['settings'];
+        }
+
+        // add plugins to enabled plugins
         $settings['plugins'][] = $enabled_plugin;
       }
     }
