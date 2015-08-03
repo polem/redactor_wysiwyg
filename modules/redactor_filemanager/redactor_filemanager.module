@@ -4,35 +4,44 @@
  * Implements hook_menu().
  */
 function redactor_filemanager_menu() {
-  $items['redactor/filemanager/upload'] = array(
+  $items['redactor/filemanager/%wysiwyg_profile/upload'] = array(
     'title' => 'Redactor file upload',
     'description' => 'Ajax callback to upload files from Redactor editor',
+    'page arguments' => array(2),
     'page callback' => 'redactor_filemanager_upload',
-    'access arguments' => array('redactor upload files'),
+    'access callback' => 'redactor_filemanager_access_callback',
+    'access arguments' => array(2, 'redactor upload files'),
     'type' => MENU_CALLBACK,
   );
 
-  $items['redactor/filemanager/files.json'] = array(
+  $items['redactor/filemanager/%wysiwyg_profile/files.json'] = array(
     'title' => 'Redactor file list',
     'description' => 'Ajax callback to list files from Redactor editor',
+    'page arguments' => array(2),
     'page callback' => 'redactor_filemanager_list',
-    'access arguments' => array('redactor list files'),
+    'access callback' => 'redactor_filemanager_access_callback',
+    'access arguments' => array(2, 'redactor list files'),
     'type' => MENU_CALLBACK,
   );
 
   return $items;
 }
 
+function redactor_filemanager_access_callback($wysiwyg_profile, $permission) {
+  $format = filter_format_load($wysiwyg_profile->format);
+  return user_access($permission) && filter_access($format);
+}
+
 /**
  * return json file of public images
  */
-function redactor_filemanager_list() {
+function redactor_filemanager_list($wysiwyg_profile) {
   $files_urls = array();
 
-  $extensions = array('pdf', 'doc', 'docx', 'zip');
+  $config = redactor_get_plugin_config('filemanager', $wysiwyg_profile);
 
   $files = file_scan_directory(
-    'public://', '/\.(' . join($extensions, '|') . ')$/',
+    $config['upload_dir'], '/\.(' . join(drupal_explode_tags($config['extensions']), '|') . ')$/',
     array(
       'recurse' => false
     )
@@ -42,7 +51,7 @@ function redactor_filemanager_list() {
     $url = parse_url(file_create_url($file->uri));
     $files_urls[] = array(
       'link'  => $url['path'],
-      'size'  => redactor_human_filesize(filesize($file->uri)),
+      'size'  => format_size(filesize($file->uri)),
       'name'  => $file->name,
       'title' => $file->name
     );
@@ -71,8 +80,10 @@ function redactor_filemanager_permission() {
 /**
  * Callback to upload files
  */
-function redactor_filemanager_upload() {
-  $file = file_unmanaged_copy($_FILES['file']['tmp_name'], 'public://' . $_FILES['file']['name']);
+function redactor_filemanager_upload($wysiwyg_profile) {
+  $config = redactor_get_plugin_config('filemanager', $wysiwyg_profile);
+
+  $file = file_unmanaged_copy($_FILES['file']['tmp_name'], $config['upload_dir'] . $_FILES['file']['name']);
   $file = file_create_url($file);
 
   drupal_json_output(array(
@@ -94,11 +105,60 @@ function redactor_filemanager_redactor_plugins($editor) {
           $editor['library path'] . '/plugins/filemanager.js' => array(),
         ),
       ),
-      'settings' => array(
-        'fileManagerJson' => url('redactor/filemanager/files.json'),
-        'fileUpload' => url('redactor/filemanager/upload'),
+      // php config
+      'config' => array(
+        'extensions' => 'doc, xls, docx, pages, xlsx, zip, pdf',
+        'upload_dir' => 'public://',
       ),
+      // redactor js settings
+      'settings callback' => function($context) {
+        $profile = $context['profile'];
+        return array(
+          'fileManagerJson' => url('redactor/filemanager/'.$profile->format.'/files.json'),
+          'fileUpload' => url('redactor/filemanager/'.$profile->format.'/upload'),
+        );
+      },
     ),
   );
 }
 
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function redactor_filemanager_form_wysiwyg_profile_form_alter(&$form, &$form_state, $profile) {
+  if($form_state['wysiwyg']['editor'] == 'redactor') {
+    return;
+  }
+
+  $form['filemanager'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('file manager settings'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#tree' => TRUE,
+  );
+
+  $profile = $form_state['wysiwyg_profile'];
+
+  $profile = (array) $profile;
+  $profile['settings']['filemanager'] += redactor_get_plugin_config('filemanager', $profile);
+  $profile = (object) $profile;
+
+  $form['filemanager']['extensions'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Allowed file extensions',
+    '#size' => 40,
+    '#maxlength' => 250,
+    '#default_value' => !empty($profile->settings['filemanager']['extensions']) ? $profile->settings['filemanager']['extensions'] : NULL,
+    '#description' => 'comma seprated extensions',
+  );
+
+  $form['filemanager']['upload_dir'] = array(
+    '#type' => 'textfield',
+    '#title' => 'file directory',
+    '#size' => 40,
+    '#maxlength' => 250,
+    '#default_value' => !empty($profile->settings['filemanager']['upload_dir']) ? $profile->settings['filemanager']['upload_dir'] : NULL,
+    '#description' => 'directory where file will be uploaded'
+  );
+}

@@ -5,23 +5,32 @@
  * Implements hook_menu().
  */
 function redactor_imagemanager_menu() {
-  $items['redactor/imagemanager/upload'] = array(
+  $items['redactor/imagemanager/%wysiwyg_profile/upload'] = array(
     'title' => 'Redactor image upload',
     'description' => 'Ajax callback to upload image from Redactor editor',
     'page callback' => 'redactor_imagemanager_upload',
-    'access arguments' => array('redactor upload images'),
+    'page arguments' => array(2),
+    'access callback' => 'redactor_imagemanager_access_callback',
+    'access arguments' => array(2, 'redactor upload images'),
     'type' => MENU_CALLBACK,
   );
 
-  $items['redactor/imagemanager/images.json'] = array(
+  $items['redactor/imagemanager/%wysiwyg_profile/images.json'] = array(
     'title' => 'Redactor image list',
     'description' => 'Ajax callback to list image from Redactor editor',
     'page callback' => 'redactor_imagemanager_list',
-    'access arguments' => array('redactor list images'),
+    'page arguments' => array(2),
+    'access callback' => 'redactor_imagemanager_access_callback',
+    'access arguments' => array(2, 'redactor list images'),
     'type' => MENU_CALLBACK,
   );
 
   return $items;
+}
+
+function redactor_imagemanager_access_callback($wysiwyg_profile, $permission) {
+  $format = filter_format_load($wysiwyg_profile->format);
+  return user_access($permission) && filter_access($format);
 }
 
 /**
@@ -43,9 +52,12 @@ function redactor_imagemanager_permission() {
 /**
  * Callback to upload images
  */
-function redactor_imagemanager_upload() {
+function redactor_imagemanager_upload($wysiwyg_profile) {
+
+  $config = redactor_get_plugin_config('imagemanager', $wysiwyg_profile);
+
   if (getimagesize($_FILES['file']['tmp_name'])) {
-   $file = file_unmanaged_copy($_FILES['file']['tmp_name'], 'public://' . $_FILES['file']['name']);
+   $file = file_unmanaged_copy($_FILES['file']['tmp_name'], $config['upload_dir'] . $_FILES['file']['name']);
    $file = file_create_url($file);
 
    drupal_json_output(array(
@@ -57,32 +69,50 @@ function redactor_imagemanager_upload() {
   }
 }
 
+/**
+ * get image information for redactor imagemager plugins form $file
+ * @see http://imperavi.com/redactor/plugins/image-manager
+ * @param $file image file
+ * @return array image informations
+ *   array(
+ *     'thumb' => '1m.jpg',
+ *     'image' => '1.jpg',
+ *     'title' => 'Image 1'
+ *   )
+ */
+function redactor_imagemanager_get_image_infos($file) {
+    $url = parse_url(file_create_url($file->uri));
+    $infos = array(
+      'image' => $url['path'],
+      'thumb' => image_style_url('thumbnail', $file->uri),
+      'name'  => $file->name
+    );
+
+    drupal_alter('redactor_imagemanager_image_infos', $infos, $file);
+
+    return $infos;
+}
 
 /**
  * return json file of public images
  */
-function redactor_imagemanager_list() {
-  $files_urls = array();
+function redactor_imagemanager_list($wysiwyg_profile) {
+  $files_infos = array();
 
-  $extensions = array('jpg', 'png', 'jpeg');
+  $config = redactor_get_plugin_config('imagemanager', $wysiwyg_profile);
 
   $files = file_scan_directory(
-    'public://', '/\.(' . join($extensions, '|') . ')$/',
+    $config['upload_dir'], '/\.(' . join(drupal_explode_tags($config['extensions']), '|') . ')$/',
     array(
       'recurse' => false
     )
   );
 
   foreach($files as $file) {
-    $url = parse_url(file_create_url($file->uri));
-    $files_urls[] = array(
-      'image' => $url['path'],
-      'thumb' => image_style_url('thumbnail', $file->uri),
-      'name'  => $file->name
-    );
+    $files_infos[] = redactor_imagemanager_get_image_infos($file);
   }
 
-  return drupal_json_output($files_urls);
+  return drupal_json_output($files_infos);
 }
 
 /**
@@ -98,11 +128,61 @@ function redactor_imagemanager_redactor_plugins($editor) {
           $editor['library path'] . '/plugins/imagemanager.js' => array(),
         ),
       ),
-      'settings' => array(
-        'imageManagerJson' => url('redactor/imagemanager/images.json'),
-        'imageUpload' => url('redactor/imagemanager/upload'),
+      // php config
+      'config' => array(
+        'extensions' => 'jpg, png, gif, jpeg',
+        'upload_dir' => 'public://',
       ),
+      // redactor js config
+      'settings callback' => function($context) {
+        $profile = $context['profile'];
+        return array(
+          'imageManagerJson' => url('redactor/imagemanager/'.$profile->format.'/images.json'),
+          'imageUpload' => url('redactor/imagemanager/'.$profile->format.'/upload'),
+        );
+      },
     ),
+  );
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function redactor_imagemanager_form_wysiwyg_profile_form_alter(&$form, &$form_state, $profile) {
+  if($form_state['wysiwyg']['editor'] == 'redactor') {
+    return;
+  }
+
+  $form['imagemanager'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Image manager settings'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#tree' => TRUE,
+  );
+
+  $profile = $form_state['wysiwyg_profile'];
+
+  $profile = (array) $profile;
+  $profile['settings']['imagemanager'] += redactor_get_plugin_config('imagemanager', $profile);
+  $profile = (object) $profile;
+
+  $form['imagemanager']['extensions'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Allowed file extensions',
+    '#size' => 40,
+    '#maxlength' => 250,
+    '#default_value' => !empty($profile->settings['imagemanager']['extensions']) ? $profile->settings['imagemanager']['extensions'] : NULL,
+    '#description' => 'comma seprated extensions',
+  );
+
+  $form['imagemanager']['upload_dir'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Image directory',
+    '#size' => 40,
+    '#maxlength' => 250,
+    '#default_value' => !empty($profile->settings['imagemanager']['upload_dir']) ? $profile->settings['imagemanager']['upload_dir'] : NULL,
+    '#description' => 'directory where image will be uploaded'
   );
 }
 

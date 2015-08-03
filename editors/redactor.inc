@@ -114,25 +114,16 @@ function redactor_redactor_themes($editor, $profile) {
 }
 
 function redactor_redactor_settings($editor, $config, $theme) {
-  global $language ;
-  $lang_name = $language->language;
 
   $settings = array(
     'plugins' => array()
   );
 
-  $plugin_configs = redactor_get_plugins();
-
   if (!empty($config['plugins'])) {
     foreach ($config['plugins'] as $plugin => $enabled_plugins) {
       foreach($enabled_plugins as $enabled_plugin => $plugin_name) {
-        $plugin_config = $plugin_configs[$enabled_plugin];
+        $plugin_config = redactor_get_plugin($enabled_plugin);
         redactor_redactor_load_plugin_files($editor, $plugin_config);
-
-        // merge plugin settings into editor settings
-        if(isset($plugin_config['settings'])) {
-          $settings += $plugin_config['settings'];
-        }
 
         // add plugins to enabled plugins
         $settings['plugins'][] = $enabled_plugin;
