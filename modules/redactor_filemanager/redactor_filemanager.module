@@ -137,7 +137,7 @@ function redactor_filemanager_form_wysiwyg_profile_form_alter(&$form, &$form_sta
     $profile['settings']['filemanager'] = array();
   }
 
-  $profile['settings']['filemanager'] += redactor_get_plugin_config('filemanager', $profile);
+  $profile['settings']['filemanager'] += redactor_get_plugin_config('filemanager');
   $profile = (object) $profile;
 
   $form['filemanager']['extensions'] = array(

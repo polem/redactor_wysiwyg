@@ -202,17 +202,17 @@ function redactor_profile_form_submit($form, &$form_state) {
  * @param object $wysiwyg_profile
  * @return array merged config
  */
-function redactor_get_plugin_config($plugin_name, $wysiwyg_profile) {
+function redactor_get_plugin_config($plugin_name, $wysiwyg_profile = null) {
   $config = array();
 
   $plugin = redactor_get_plugin_definition($plugin_name);
 
-  if(isset($plugin['config'])) {
-    $config = $plugin['config'];
+  if(!is_null($wysiwyg_profile) && isset($wysiwyg_profile->settings[$plugin_name])) {
+    $config = $wysiwyg_profile->settings[$plugin_name];
   }
 
-  if(isset($wysiwyg_profile->settings[$plugin_name])) {
-    $config = $config + $wysiwyg_profile->settings[$plugin_name];
+  if(isset($plugin['config'])) {
+    $config += $plugin['config'];
   }
 
   return $config;

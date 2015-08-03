@@ -170,11 +170,11 @@ function redactor_imagemanager_form_wysiwyg_profile_form_alter(&$form, &$form_st
 
   $profile = (array) $profile;
 
-  if(empty($proimage['settings']['imagemanager'])) {
+  if(empty($profile['settings']['imagemanager'])) {
     $profile['settings']['imagemanager'] = array();
   }
 
-  $profile['settings']['imagemanager'] += redactor_get_plugin_config('imagemanager', $profile);
+  $profile['settings']['imagemanager'] += redactor_get_plugin_config('imagemanager');
   $profile = (object) $profile;
 
   $form['imagemanager']['extensions'] = array(

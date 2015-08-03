@@ -149,7 +149,7 @@ function redactor_redactor_settings($editor, $config, $theme) {
   if (isset($config['language'])) {
     $settings['lang'] = $config['language'];
 
-    if($language != 'en') {
+    if($config['language'] != 'en') {
       drupal_add_js($editor['library path'] . '/langs/' . $config['language'] . '.js', array(
         'scope' => 'footer'
       ));
