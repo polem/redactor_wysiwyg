@@ -128,21 +128,26 @@ function redactor_imagemanager_redactor_plugins($editor) {
           $editor['library path'] . '/plugins/imagemanager.js' => array(),
         ),
       ),
-      // php config
       'config' => array(
         'extensions' => 'jpg, png, gif, jpeg',
         'upload_dir' => 'public://',
       ),
-      // redactor js config
-      'settings callback' => function($context) {
-        $profile = $context['profile'];
-        return array(
-          'imageManagerJson' => url('redactor/imagemanager/'.$profile->format.'/images.json'),
-          'imageUpload' => url('redactor/imagemanager/'.$profile->format.'/upload'),
-        );
-      },
     ),
   );
+}
+
+function redactor_imagemanager_wysiwyg_editor_settings_alter(&$settings, $context) {
+  if($context['editor']['name'] != 'redactor') {
+    return;
+  }
+
+  if(!in_array('imagemanager', $settings['plugins'])) {
+    return;
+  }
+
+  $profile = $context['profile'];
+  $settings['imageManagerJson'] = url('redactor/imagemanager/'.$profile->format.'/images.json');
+  $settings['imageUpload'] = url('redactor/imagemanager/'.$profile->format.'/upload');
 }
 
 /**
@@ -164,6 +169,11 @@ function redactor_imagemanager_form_wysiwyg_profile_form_alter(&$form, &$form_st
   $profile = $form_state['wysiwyg_profile'];
 
   $profile = (array) $profile;
+
+  if(empty($proimage['settings']['imagemanager'])) {
+    $profile['settings']['imagemanager'] = array();
+  }
+
   $profile['settings']['imagemanager'] += redactor_get_plugin_config('imagemanager', $profile);
   $profile = (object) $profile;
 

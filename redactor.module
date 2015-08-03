@@ -194,27 +194,6 @@ function redactor_profile_form_submit($form, &$form_state) {
   }
 }
 
-function redactor_wysiwyg_editor_settings_alter(&$settings, $context) {
-  if(!isset($settings['plugins'])) {
-    return;
-  };
-
-  foreach($settings['plugins'] as $plugin) {
-
-    $plugin_config = redactor_get_plugin($plugin);
-
-    // merge plugin settings into editor settings
-    if(isset($plugin_config['settings'])) {
-      $settings += $plugin_config['settings'];
-    }
-
-    // call settings callback then merge result with editor settings
-    if(isset($plugin_config['settings callback']) && is_callable($plugin_config['settings callback'])) {
-      $settings += call_user_func($plugin_config['settings callback'], $context);
-    }
-  }
-}
-
 /**
  * Get plugin config from hook_redactor plugin 'config' key
  * and merge it with wysiwyg_profile config values (admin form)

@@ -105,19 +105,10 @@ function redactor_filemanager_redactor_plugins($editor) {
           $editor['library path'] . '/plugins/filemanager.js' => array(),
         ),
       ),
-      // php config
       'config' => array(
         'extensions' => 'doc, xls, docx, pages, xlsx, zip, pdf',
         'upload_dir' => 'public://',
       ),
-      // redactor js settings
-      'settings callback' => function($context) {
-        $profile = $context['profile'];
-        return array(
-          'fileManagerJson' => url('redactor/filemanager/'.$profile->format.'/files.json'),
-          'fileUpload' => url('redactor/filemanager/'.$profile->format.'/upload'),
-        );
-      },
     ),
   );
 }
@@ -141,6 +132,11 @@ function redactor_filemanager_form_wysiwyg_profile_form_alter(&$form, &$form_sta
   $profile = $form_state['wysiwyg_profile'];
 
   $profile = (array) $profile;
+
+  if(empty($profile['settings']['filemanager'])) {
+    $profile['settings']['filemanager'] = array();
+  }
+
   $profile['settings']['filemanager'] += redactor_get_plugin_config('filemanager', $profile);
   $profile = (object) $profile;
 
@@ -162,3 +158,18 @@ function redactor_filemanager_form_wysiwyg_profile_form_alter(&$form, &$form_sta
     '#description' => 'directory where file will be uploaded'
   );
 }
+
+function redactor_filemanager_wysiwyg_editor_settings_alter(&$settings, $context) {
+  if($context['editor']['name'] != 'redactor') {
+    return;
+  }
+
+  if(!in_array('filemanager', $settings['plugins'])) {
+    return;
+  }
+
+  $profile = $context['profile'];
+  $settings['fileManagerJson'] = url('redactor/filemanager/'.$profile->format.'/files.json');
+  $settings['fileUpload'] = url('redactor/filemanager/'.$profile->format.'/upload');
+}
+
