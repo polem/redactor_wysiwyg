@@ -64,16 +64,19 @@ function redactor_redactor_load($editor, $library) {
   $lang_name = $language->language;
 
   drupal_add_css($editor['library path'] . '/redactor.css');
-
-  if($lang_name != 'en') {
-    drupal_add_js($editor['library path'] . '/langs/' . $lang_name . '.js', array(
-      'scope' => 'footer'
-    ));
-  }
 }
 
-function redactor_redactor_load_plugin_files($editor, $config) {
-  if(!isset($config['files'])) {
+/**
+ * Helper function to load js and css files required by a redactor plugin
+ *
+ * @param string plugin name
+ * @see hook_redactor_plugins();
+ */
+function _redactor_redactor_load_plugin_files($plugin_name) {
+
+  $plugin = redactor_get_plugin_definition($plugin_name);
+
+  if(!isset($plugin['files'])) {
     return;
   }
 
@@ -87,8 +90,8 @@ function redactor_redactor_load_plugin_files($editor, $config) {
     'group' => JS_DEFAULT
   );
 
-  if(isset($config['files']['js'])) {
-    foreach($config['files']['js'] as $data => $options) {
+  if(isset($plugin['files']['js'])) {
+    foreach($plugin['files']['js'] as $data => $options) {
       if(!is_string($data)) {
         $data = $options;
         $options = array();
@@ -98,8 +101,8 @@ function redactor_redactor_load_plugin_files($editor, $config) {
     }
   }
 
-  if(isset($config['files']['css'])) {
-    foreach($config['files']['css'] as $data => $options) {
+  if(isset($plugin['files']['css'])) {
+    foreach($plugin['files']['css'] as $data => $options) {
       if(!is_string($data)) {
         $data = $options;
         $options = array();
@@ -116,14 +119,15 @@ function redactor_redactor_themes($editor, $profile) {
 function redactor_redactor_settings($editor, $config, $theme) {
 
   $settings = array(
-    'plugins' => array()
+    'plugins' => array(),
+    'buttons' => array()
   );
 
+  // add enabled plugins name to plugins editor settings and load css and js files
   if (!empty($config['plugins'])) {
     foreach ($config['plugins'] as $plugin => $enabled_plugins) {
       foreach($enabled_plugins as $enabled_plugin => $plugin_name) {
-        $plugin_config = redactor_get_plugin($enabled_plugin);
-        redactor_redactor_load_plugin_files($editor, $plugin_config);
+        _redactor_redactor_load_plugin_files($enabled_plugin);
 
         // add plugins to enabled plugins
         $settings['plugins'][] = $enabled_plugin;
@@ -131,6 +135,7 @@ function redactor_redactor_settings($editor, $config, $theme) {
     }
   }
 
+  // add enabled buttons to editor button config
   if (!empty($config['buttons'])) {
     $buttons = array();
     foreach ($config['buttons'] as $plugin => $enabled_buttons) {
@@ -143,29 +148,21 @@ function redactor_redactor_settings($editor, $config, $theme) {
 
   if (isset($config['language'])) {
     $settings['lang'] = $config['language'];
+
+    if($language != 'en') {
+      drupal_add_js($editor['library path'] . '/langs/' . $config['language'] . '.js', array(
+        'scope' => 'footer'
+      ));
+    }
   }
 
   return $settings;
 }
 
-
 /**
- * Load enabled redactor plugins (wysiwyg extensions)
+ * Implements hook_redactor_wysiwyg_plugins.
+ * Define redactor buttons
  */
-function redactor_load_readactor_enabled_plugins($editor, $config) {
-  // get enabled extensions
-  foreach ($plugins as $name => $plugin) {
-    $settings['plugins'][] = $name;
-    if (!empty($plugin['files'])) {
-      if (!empty($plugin['files']['js'])) {
-        foreach($plugin['files']['js'] as $filename) {
-          drupal_add_js($editor['library path'] . '/plugins/' . $filename);
-        }
-      }
-    }
-  }
-}
-
 function redactor_redactor_wysiwyg_plugins($editor) {
   return array(
     'default' => array(

@@ -121,22 +121,22 @@ function redactor_redactor_plugins($editor) {
 }
 
 /**
- * get redactor plugin infos
+ * get redactor plugin definition
  *
- * @return array plugin info
+ * @return array plugin definition
  */
-function redactor_get_plugin($plugin_name) {
-  $plugins = redactor_get_plugins();
+function redactor_get_plugin_definition($plugin_name) {
+  $plugins = redactor_get_plugin_definitions();
   $plugin = isset($plugins[$plugin_name]) ? $plugins[$plugin_name] : null;
 
   return $plugin;
 }
 
 /**
- * Return redactor availables plugins
- *
+ * Return redactor plugins definitions
+ * @return array plugin definitions
  */
-function redactor_get_plugins() {
+function redactor_get_plugin_definitions() {
   $plugins = &drupal_static(__FUNCTION__);
 
   if (!isset($plugins)) {
@@ -165,7 +165,7 @@ function redactor_form_wysiwyg_profile_form_alter(&$form, &$form_state, $profile
     '#theme' => 'wysiwyg_admin_button_table',
   );
 
-  $plugins = redactor_get_plugins();
+  $plugins = redactor_get_plugin_definitions();
   $profile = $form_state['wysiwyg_profile'];
 
   foreach($plugins as $name => $infos) {
@@ -205,7 +205,7 @@ function redactor_profile_form_submit($form, &$form_state) {
 function redactor_get_plugin_config($plugin_name, $wysiwyg_profile) {
   $config = array();
 
-  $plugin = redactor_get_plugin($plugin_name);
+  $plugin = redactor_get_plugin_definition($plugin_name);
 
   if(isset($plugin['config'])) {
     $config = $plugin['config'];
