@@ -1,17 +1,16 @@
-redactor
-========
+<?php
 
-Drupal 7 redactor wysiwyg adapter
-
-## Add a redactor plugin
-
-You have to implement `hook_redactor_plugins`
-
-```
 /**
- * Implements hook_redactor_plugins().
+ * @file
+ * Integrates redactor editors with Drupal.
  */
-function my_module_redactor_plugins($editor) {
+
+/**
+ * hook_redactor_plugins
+ *
+ * @param array $editor
+ */
+function hook_redactor_plugins($editor) {
 
   return array(
     'my_plugin_id' => array(
@@ -31,5 +30,3 @@ function my_module_redactor_plugins($editor) {
     ),
   );
 }
-```
-

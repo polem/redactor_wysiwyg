@@ -182,6 +182,12 @@ function redactor_form_wysiwyg_profile_form_alter(&$form, &$form_state, $profile
   return $form;
 }
 
+/**
+ * extra submit form callback
+ *
+ * @param object $form
+ * @param object $form_state
+ */
 function redactor_profile_form_submit($form, &$form_state) {
   $values = &$form_state['values'];
   if (isset($values['plugins'])) {
