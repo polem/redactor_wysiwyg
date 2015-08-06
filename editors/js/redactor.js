@@ -1,6 +1,7 @@
 (function($) {
 
 Drupal.wysiwyg.editor.init.redactor = function(settings) {
+  $(document).trigger('redactor.init', [settings]);
 };
 
 /**
@@ -9,6 +10,7 @@ Drupal.wysiwyg.editor.init.redactor = function(settings) {
  * See Drupal.wysiwyg.editor.attach.none() for a full desciption of this hook.
  */
 Drupal.wysiwyg.editor.attach.redactor = function(context, params, settings) {
+  $(document).trigger('redactor.attach', [context, params, settings]);
   $('#' + params.field).redactor(settings);
 };
 
@@ -22,6 +24,7 @@ Drupal.wysiwyg.editor.detach.redactor = function (context, params, trigger) {
     return;
   }
 
+  $(document).trigger('redactor.detach', [context, params, settings]);
   $('#' + params.field).redactor('core.destroy');
 };
 
