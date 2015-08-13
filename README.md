@@ -5,9 +5,9 @@ Drupal 7 redactor wysiwyg adapter
 
 ## Add a redactor plugin
 
-You have to implement `hook_redactor_plugins`
+You have to implement `hook_redactor_plugins` css and js files will be loaded by the module
 
-```
+```php
 /**
  * Implements hook_redactor_plugins().
  */
@@ -23,13 +23,26 @@ function my_module_redactor_plugins($editor) {
         'css' => array(
           $editor['library path'] . '/plugin.css',
         ),
-      ),
-      'config' => array(
-          'param1' => 'value1',
-          'param2' => 'value2'
-      ),
+      )
     ),
   );
 }
+```
+
+## Alter settings in javascript.
+
+```js
+(function($) {
+  'use strict';
+  Drupal.behaviors.my_redactor_module = {
+    attach: function(context, settings) {
+
+      $(document).bind('redactor.attach', function(e, context, params, settings) {
+        settings.linkifyCallback = function(elements) {
+        };
+      });
+    }
+  };
+})(jQuery);
 ```
 
