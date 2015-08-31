@@ -24,7 +24,7 @@ Drupal.wysiwyg.editor.detach.redactor = function (context, params, trigger) {
     return;
   }
 
-  $(document).trigger('redactor.detach', [context, params, settings]);
+  $(document).trigger('redactor.detach', [context, params, trigger]);
   $('#' + params.field).redactor('core.destroy');
 };
 
