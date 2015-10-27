@@ -1,0 +1,12 @@
+{
+    "name": "polem/redactor_wysiwyg",
+    "type": "drupal-module",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Paul-Émile MINY",
+            "email": "paulemile.miny@gmail.com"
+        }
+    ],
+    "require": {}
+}
