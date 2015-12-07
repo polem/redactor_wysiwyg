@@ -84,11 +84,16 @@ function redactor_filemanager_upload($wysiwyg_profile) {
   $config = redactor_get_plugin_config('filemanager', $wysiwyg_profile);
 
   $file = file_unmanaged_copy($_FILES['file']['tmp_name'], $config['upload_dir'] . $_FILES['file']['name']);
-  $file = file_create_url($file);
+  $filelink = file_create_url($file);
+
+  $extension = pathinfo($file, PATHINFO_EXTENSION);
 
   drupal_json_output(array(
     'filename' => $_FILES['file']['name'],
-    'filelink' => $file
+    'filelink' => $filelink,
+    'size' => format_size(filesize($file)),
+    'mime' => file_get_mimetype($file),
+    'ext' => $extension
   ));
 }
 
@@ -172,4 +177,3 @@ function redactor_filemanager_wysiwyg_editor_settings_alter(&$settings, $context
   $settings['fileManagerJson'] = url('redactor/filemanager/'.$profile->format.'/files.json');
   $settings['fileUpload'] = url('redactor/filemanager/'.$profile->format.'/upload');
 }
-
