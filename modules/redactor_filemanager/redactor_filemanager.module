@@ -49,11 +49,17 @@ function redactor_filemanager_list($wysiwyg_profile) {
 
   foreach($files as $file) {
     $url = parse_url(file_create_url($file->uri));
+    $extension = pathinfo($file->uri, PATHINFO_EXTENSION);
+
     $files_urls[] = array(
-      'link'  => $url['path'],
-      'size'  => format_size(filesize($file->uri)),
-      'name'  => $file->name,
-      'title' => $file->name
+      'link'     => $url['path'],
+      'size'     => format_size(filesize($file->uri)),
+      'name'     => $file->name,
+      'title'    => $file->name,
+      'filelink' => $url['path'],
+      'filename' => $file->name,
+      'mime'     => file_get_mimetype($file),
+      'ext'      => $extension
     );
   }
 
