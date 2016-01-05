@@ -142,6 +142,8 @@ function redactor_get_plugin_definitions() {
   if (!isset($plugins)) {
     $editor = wysiwyg_get_editor('redactor');
     $plugins = module_invoke_all('redactor_plugins', $editor);
+    
+    drupal_alter('redactor_plugins', $plugins);
   }
 
   return $plugins;
