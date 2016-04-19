@@ -104,7 +104,7 @@ function redactor_imagemanager_list($wysiwyg_profile) {
   $files = file_scan_directory(
     $config['upload_dir'], '/\.(' . join(drupal_explode_tags($config['extensions']), '|') . ')$/',
     array(
-      'recurse' => false
+      'recurse' => $config['recursive']
     )
   );
 
@@ -131,6 +131,7 @@ function redactor_imagemanager_redactor_plugins($editor) {
       'config' => array(
         'extensions' => 'jpg, png, gif, jpeg',
         'upload_dir' => 'public://',
+        'recursive'  => false,
       ),
     ),
   );
@@ -193,6 +194,13 @@ function redactor_imagemanager_form_wysiwyg_profile_form_alter(&$form, &$form_st
     '#maxlength' => 250,
     '#default_value' => !empty($profile->settings['imagemanager']['upload_dir']) ? $profile->settings['imagemanager']['upload_dir'] : NULL,
     '#description' => 'directory where image will be uploaded'
+  );
+
+  $form['imagemanager']['recursive'] = array(
+    '#type' => 'checkbox',
+    '#title' => 'Recursive image directory',
+    '#default_value' => !empty($profile->settings['imagemanager']['recursive']) ? $profile->settings['imagemanager']['recursive'] : FALSE,
+    '#description' => 'Scan directory recursively'
   );
 }
 
